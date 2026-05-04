@@ -10,15 +10,15 @@ import { motion } from "framer-motion"
 
 export default function CustomerPortal() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
 
-      <main className="flex-1 max-w-[600px] w-full mx-auto px-6 py-12 flex flex-col">
+      <main className="mx-auto flex w-full max-w-[600px] flex-1 flex-col px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="space-y-2 mb-12"
+          className="mb-12 space-y-2"
         >
           <h1 className="text-3xl font-bold tracking-tight">
             Your AI support assistant.
@@ -34,22 +34,16 @@ export default function CustomerPortal() {
           transition={{ duration: 0.2, delay: 0.05, ease: "easeOut" }}
         >
           <Tabs defaultValue="track" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 rounded-none bg-neutral-100 dark:bg-neutral-900 p-1 mb-8">
+            <TabsList className="mb-8 grid w-full grid-cols-3 rounded-none bg-neutral-100 p-1 dark:bg-neutral-900">
               <TabsTrigger
                 value="track"
-                className="rounded-none text-xs font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-none text-xs font-bold tracking-wider uppercase data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Track Order
               </TabsTrigger>
               <TabsTrigger
-                value="support"
-                className="rounded-none text-xs font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Get Support
-              </TabsTrigger>
-              <TabsTrigger
                 value="contact"
-                className="rounded-none text-xs font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-none text-xs font-bold tracking-wider uppercase data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Contact Agent
               </TabsTrigger>
