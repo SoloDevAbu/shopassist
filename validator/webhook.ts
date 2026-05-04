@@ -21,15 +21,29 @@ export const BolnaWebhookPayloadSchema = z.object({
   ]),
 
   // Phone numbers (present once call connects)
-  to_number: z.string().nullish(),   // customer's phone
-  from_number: z.string().nullish(), // Bolna's number
+  // Bolna uses user_number / agent_number in the execution object
+  to_number: z.string().nullish(),   // customer's phone (older field)
+  from_number: z.string().nullish(), // Bolna's number (older field)
+  user_number: z.string().nullish(), // customer's phone (current field)
+  agent_number: z.string().nullish(), // agent/Bolna's number (current field)
 
   // Timestamps
   created_at: z.string().nullish(),
   updated_at: z.string().nullish(),
 
-  // Duration in seconds — only on completed/failed
+  // Duration in seconds — conversation_duration is the canonical field
   duration: z.number().nullish(),
+  conversation_duration: z.number().nullish(),
+
+  // Telephony data block (contains duration as string, recording_url, etc.)
+  telephony_data: z
+    .object({
+      duration: z.union([z.string(), z.number()]).nullish(),
+      call_type: z.string().nullish(),
+      hangup_by: z.string().nullish(),
+      recording_url: z.string().nullish(),
+    })
+    .nullish(),
 
   // Content — only on completed
   transcript: z.string().nullish(),

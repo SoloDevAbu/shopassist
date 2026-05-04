@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "../../../../lib/prisma"
-import { verifyAgentSecret } from "../../../../lib/auth"
-import { upsertContext } from "../../../../lib/call-context"
-import { CancelSubscriptionBodySchema } from "../../../../validator/subscription"
+import prisma from "@/lib/prisma"
+import { verifyAgentSecret } from "@/lib/auth"
+import { upsertContext } from "@/lib/call-context"
+import { CancelSubscriptionBodySchema } from "@/validator/subscription"
 
 /**
  * POST /api/subscriptions/cancel
@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
       data: {
         status: "cancelled",
         cancelledAt,
-        cancelReason: reason ?? "Customer requested cancellation via voice agent",
+        cancelReason:
+          reason ?? "Customer requested cancellation via voice agent",
       },
     })
 
@@ -108,7 +109,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 8. Return confirmation
-    const planName = updated.plan.charAt(0).toUpperCase() + updated.plan.slice(1)
+    const planName =
+      updated.plan.charAt(0).toUpperCase() + updated.plan.slice(1)
 
     return NextResponse.json({
       success: true,

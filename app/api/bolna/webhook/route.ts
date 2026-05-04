@@ -158,13 +158,30 @@ export async function POST(request: NextRequest) {
     status,
     to_number,
     from_number,
+    user_number,
+    agent_number,
     duration,
+    conversation_duration,
+    telephony_data,
     transcript,
     summary,
     tool_calls,
     extractions,
     agent_id,
   } = parsed.data
+
+  // Resolve phone numbers — newer Bolna payloads use user_number/agent_number
+  const resolvedToNumber = user_number ?? to_number ?? null
+  const resolvedFromNumber = agent_number ?? from_number ?? null
+
+  // Resolve duration — prefer conversation_duration, then telephony_data.duration, then duration
+  const resolvedDuration =
+    conversation_duration ??
+    (telephony_data?.duration != null
+      ? Number(telephony_data.duration)
+      : null) ??
+    duration ??
+    null
 
   // Idempotency key: composite id::status — Bolna sends one event per status change
   const eventId = `${id}::${status}`
@@ -192,9 +209,9 @@ export async function POST(request: NextRequest) {
     payload: {
       executionId: id,
       agentId: agent_id,
-      toNumber: to_number,
-      fromNumber: from_number,
-      duration,
+      toNumber: resolvedToNumber,
+      fromNumber: resolvedFromNumber,
+      duration: resolvedDuration,
       transcript,
       summary,
       toolCallNames,

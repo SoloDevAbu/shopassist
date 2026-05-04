@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "../../../../lib/prisma"
-import { verifyAgentSecret } from "../../../../lib/auth"
-import { upsertContext } from "../../../../lib/call-context"
-import { OrderStatusQuerySchema } from "../../../../validator/order"
+import prisma from "@/lib/prisma"
+import { verifyAgentSecret } from "@/lib/auth"
+import { upsertContext } from "@/lib/call-context"
+import { OrderStatusQuerySchema } from "@/validator/order"
 
 /**
  * GET /api/orders/status
@@ -55,6 +55,13 @@ export async function GET(request: NextRequest) {
     const order = await prisma.order.findUnique({
       where: { orderId: order_id },
     })
+
+    // Store customer email in context so cancel can use it as fallback
+    if (order?.customerEmail && call_sid) {
+      await upsertContext(call_sid, {
+        lastCustomerEmail: order.customerEmail,
+      })
+    }
 
     // 5. Not found
     if (!order) {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "../../../../lib/prisma"
-import { verifyAgentSecret } from "../../../../lib/auth"
-import { upsertContext, getContext } from "../../../../lib/call-context"
-import { CancelOrderBodySchema } from "../../../../validator/order"
+import prisma from "@/lib/prisma"
+import { verifyAgentSecret } from "@/lib/auth"
+import { upsertContext, getContext } from "@/lib/call-context"
+import { CancelOrderBodySchema } from "@/validator/order"
 
 /**
  * POST /api/orders/cancel
@@ -55,6 +55,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Normalise email — trim and lowercase to avoid transcription-induced mismatches
+    customer_email = customer_email.trim().toLowerCase()
+
+    // Fall back to call context email if available
+    if (!customer_email && call_sid) {
+      const ctx = await getContext(call_sid)
+      if (ctx?.lastCustomerEmail) {
+        customer_email = (ctx.lastCustomerEmail as string).toLowerCase()
+      }
+    }
+
     // 3. Query order
     const order = await prisma.order.findUnique({
       where: { orderId: order_id },
@@ -74,19 +85,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 5. Email verification (case-insensitive)
-    if (order.customerEmail.toLowerCase() !== customer_email.toLowerCase()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "EMAIL_MISMATCH",
-            message:
-              "The email address provided does not match our records for this order.",
+    // 5. Email verification (case-insensitive, trimmed)
+    if (order.customerEmail.toLowerCase().trim() !== customer_email) {
+      // Try call context email as fallback
+      let contextEmail: string | null = null
+      if (call_sid) {
+        const ctx = await getContext(call_sid)
+        contextEmail = ctx?.lastCustomerEmail
+          ? (ctx.lastCustomerEmail as string).toLowerCase().trim()
+          : null
+      }
+
+      if (!contextEmail || order.customerEmail.toLowerCase().trim() !== contextEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "EMAIL_MISMATCH",
+              message:
+                "The email address provided does not match our records for this order. Please verify the email address.",
+            },
           },
-        },
-        { status: 403 }
-      )
+          { status: 403 }
+        )
+      }
+      // Accepted via context email fallback
     }
 
     // 6. Check order status

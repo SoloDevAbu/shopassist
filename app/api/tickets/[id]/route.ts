@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "../../../../lib/prisma"
-import { UpdateTicketBodySchema } from "../../../../validator/ticket"
+import prisma from "@/lib/prisma"
+import { UpdateTicketBodySchema } from "@/validator/ticket"
 
 // GET /api/tickets/[id] — Single ticket detail (dashboard)
 export async function GET(
@@ -11,19 +11,29 @@ export async function GET(
     const { id } = await params
     const ticket = await prisma.supportTicket.findFirst({
       where: {
-        OR: [
-          { id: id },
-          { ticketId: id }
-        ]
+        OR: [{ id: id }, { ticketId: id }],
       },
       include: {
-        order: { select: { orderId: true, status: true, totalAmount: true, items: true } },
+        order: {
+          select: {
+            orderId: true,
+            status: true,
+            totalAmount: true,
+            items: true,
+          },
+        },
       },
     })
 
     if (!ticket) {
       return NextResponse.json(
-        { success: false, error: { code: "TICKET_NOT_FOUND", message: `No ticket found with ID ${id}` } },
+        {
+          success: false,
+          error: {
+            code: "TICKET_NOT_FOUND",
+            message: `No ticket found with ID ${id}`,
+          },
+        },
         { status: 404 }
       )
     }
@@ -33,7 +43,12 @@ export async function GET(
     if (ticket.callSid) {
       call = await prisma.callLog.findUnique({
         where: { callSid: ticket.callSid },
-        select: { transcript: true, summary: true, durationSeconds: true, functionsCalled: true },
+        select: {
+          transcript: true,
+          summary: true,
+          durationSeconds: true,
+          functionsCalled: true,
+        },
       })
     }
 
@@ -42,8 +57,24 @@ export async function GET(
       data: { ticket: { ...ticket, call } },
     })
   } catch (error) {
-    console.error(JSON.stringify({ level: "error", route: "GET /api/tickets/[id]", message: error instanceof Error ? error.message : String(error), timestamp: new Date().toISOString() }))
-    return NextResponse.json({ success: false, error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred" } }, { status: 500 })
+    console.error(
+      JSON.stringify({
+        level: "error",
+        route: "GET /api/tickets/[id]",
+        message: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      })
+    )
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "An unexpected error occurred",
+        },
+      },
+      { status: 500 }
+    )
   }
 }
 
@@ -59,7 +90,14 @@ export async function PATCH(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: { code: "INVALID_INPUT", message: "Validation failed", details: parsed.error.issues } },
+        {
+          success: false,
+          error: {
+            code: "INVALID_INPUT",
+            message: "Validation failed",
+            details: parsed.error.issues,
+          },
+        },
         { status: 400 }
       )
     }
@@ -69,21 +107,25 @@ export async function PATCH(
     // Check ticket exists
     const existing = await prisma.supportTicket.findFirst({
       where: {
-        OR: [
-          { id: id },
-          { ticketId: id }
-        ]
-      }
+        OR: [{ id: id }, { ticketId: id }],
+      },
     })
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: { code: "TICKET_NOT_FOUND", message: `No ticket found with ID ${id}` } },
+        {
+          success: false,
+          error: {
+            code: "TICKET_NOT_FOUND",
+            message: `No ticket found with ID ${id}`,
+          },
+        },
         { status: 404 }
       )
     }
 
     // Set resolvedAt if status is resolved or closed
-    const resolvedAt = (status === "resolved" || status === "closed") ? new Date() : undefined
+    const resolvedAt =
+      status === "resolved" || status === "closed" ? new Date() : undefined
 
     const updated = await prisma.supportTicket.update({
       where: { id: existing.id },
@@ -92,7 +134,23 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: { ticket: updated } })
   } catch (error) {
-    console.error(JSON.stringify({ level: "error", route: "PATCH /api/tickets/[id]", message: error instanceof Error ? error.message : String(error), timestamp: new Date().toISOString() }))
-    return NextResponse.json({ success: false, error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred" } }, { status: 500 })
+    console.error(
+      JSON.stringify({
+        level: "error",
+        route: "PATCH /api/tickets/[id]",
+        message: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      })
+    )
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "An unexpected error occurred",
+        },
+      },
+      { status: 500 }
+    )
   }
 }

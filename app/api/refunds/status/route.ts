@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "../../../../lib/prisma"
-import { verifyAgentSecret } from "../../../../lib/auth"
-import { upsertContext } from "../../../../lib/call-context"
-import { RefundStatusQuerySchema } from "../../../../validator/order"
+import prisma from "@/lib/prisma"
+import { verifyAgentSecret } from "@/lib/auth"
+import { upsertContext } from "@/lib/call-context"
+import { RefundStatusQuerySchema } from "@/validator/order"
 
 /**
  * GET /api/refunds/status
