@@ -4,13 +4,9 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Phone, MessageSquare, CheckCircle, Loader2, AlertCircle, ExternalLink } from "lucide-react"
+import { Phone, CheckCircle, Loader2, AlertCircle } from "lucide-react"
 
 type CallState = "idle" | "loading" | "calling" | "error"
-
-const AGENT_PLAYGROUND_URL = process.env.NEXT_PUBLIC_BOLNA_AGENT_ID
-  ? `https://platform.bolna.ai/agent/${process.env.NEXT_PUBLIC_BOLNA_AGENT_ID}/playground`
-  : "https://platform.bolna.ai"
 
 export function CallbackForm() {
   const [phone, setPhone] = React.useState("")
@@ -167,44 +163,6 @@ export function CallbackForm() {
         </AnimatePresence>
       </div>
 
-      {/* ── Divider ── */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Or</span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* ── Chat Section ── */}
-      <div>
-        <div className="flex items-center gap-3 mb-1">
-          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-bold text-sm uppercase tracking-widest">Live Chat</h2>
-        </div>
-        <p className="text-muted-foreground text-sm mb-6 pl-7">
-          Prefer to type? Chat with the same AI agent in your browser.
-        </p>
-
-        <a
-          id="chat-with-agent-link"
-          href={AGENT_PLAYGROUND_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full"
-        >
-          <Button
-            variant="outline"
-            className="w-full rounded-none border-border font-bold uppercase tracking-widest h-12 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-900 hover:border-foreground transition-colors group"
-          >
-            <MessageSquare className="h-4 w-4 mr-2 group-hover:text-[#afc524] transition-colors" />
-            Chat with Agent
-            <ExternalLink className="h-3.5 w-3.5 ml-auto opacity-50" />
-          </Button>
-        </a>
-
-        <p className="text-[11px] text-muted-foreground text-center mt-3">
-          Opens in Bolna playground · Same agent · Same capabilities
-        </p>
-      </div>
     </div>
   )
 }
