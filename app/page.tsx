@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Header } from "@/components/portal/Header"
 import { OrderLookupForm } from "@/components/portal/OrderLookupForm"
-import { SupportForm } from "@/components/portal/SupportForm"
 import { CallbackForm } from "@/components/portal/CallbackForm"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { motion } from "framer-motion"
@@ -34,7 +33,7 @@ export default function CustomerPortal() {
           transition={{ duration: 0.2, delay: 0.05, ease: "easeOut" }}
         >
           <Tabs defaultValue="track" className="w-full">
-            <TabsList className="mb-8 grid w-full grid-cols-3 rounded-none bg-neutral-100 p-1 dark:bg-neutral-900">
+            <TabsList className="mb-8 grid w-full grid-cols-2 rounded-none bg-neutral-100 p-1 dark:bg-neutral-900">
               <TabsTrigger
                 value="track"
                 className="rounded-none text-xs font-bold tracking-wider uppercase data-[state=active]:bg-background data-[state=active]:shadow-sm"

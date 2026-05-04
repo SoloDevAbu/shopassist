@@ -33,7 +33,7 @@ export function TicketDetailDialog({ ticketId, open, onOpenChange }: { ticketId:
     enabled: !!ticketId,
   })
 
-  const ticket = data?.data
+  const ticket = data?.data?.ticket
 
   React.useEffect(() => {
     if (ticket?.status) {
