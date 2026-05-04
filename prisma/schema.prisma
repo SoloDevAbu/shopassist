@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  processing
+  shipped
+  delivered
+  cancelled
+}
+
+enum RefundStatus {
+  pending
+  processing
+  completed
+  rejected
+}
+
+enum SubscriptionPlan {
+  basic
+  pro
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  cancelled
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum TicketSource {
+  voice_agent
+  web_portal
+}
+
+enum TicketCategory {
+  order
+  refund
+  shipping
+  billing
+  product
+  subscription
+  other
+}
+
+enum CallStatus {
+  initiated
+  in_progress
+  completed
+  failed
+}
+
+enum CallOutcome {
+  resolved
+  escalated
+  failed
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  orderId           String      @unique // ORD-XXXXX — what customers reference
+  customerEmail     String
+  customerName      String
+  status            OrderStatus @default(processing)
+  items             Json        // [{ name, qty, price }]
+  totalAmount       Float
+  trackingNumber    String?
+  estimatedDelivery DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  refund            Refund?
+  tickets           SupportTicket[]
+
+  @@index([orderId])
+  @@index([customerEmail])
+}
+
+model Refund {
+  id          String       @id @default(cuid())
+  orderId     String       @unique // one refund per order
+  amount      Float
+  status      RefundStatus @default(pending)
+  reason      String?
+  initiatedAt DateTime     @default(now())
+  completedAt DateTime?
+
+  order       Order        @relation(fields: [orderId], references: [orderId])
+
+  @@index([orderId])
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  customerEmail   String             @unique // one active sub per customer
+  customerName    String
+  plan            SubscriptionPlan   @default(basic)
+  status          SubscriptionStatus @default(active)
+  billingCycle    String             @default("monthly") // monthly | yearly
+  nextBillingDate DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([customerEmail])
+}
+
+model SupportTicket {
+  id           String         @id @default(cuid())
+  ticketId     String         @unique // TKT-XXXXX — read back to customer
+  callerPhone  String?
+  customerEmail String?
+  category     TicketCategory @default(other)
+  description  String
+  priority     TicketPriority @default(low)  // set by priority-engine.ts
+  status       TicketStatus   @default(open)
+  source       TicketSource   @default(voice_agent)
+  callSummary  String?        // populated from Bolna post-call summary
+  callSid      String?        // link back to call_logs
+  orderId      String?        // optional FK to orders table
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  resolvedAt   DateTime?
+
+  order        Order?         @relation(fields: [orderId], references: [orderId])
+
+  @@index([ticketId])
+  @@index([status])
+  @@index([priority])
+  @@index([callSid])
+  @@index([createdAt])
+}
+
+model CallLog {
+  id              String      @id @default(cuid())
+  callSid         String      @unique // from Bolna / telephony provider
+  agentId         String?
+  fromNumber      String?
+  toNumber        String?
+  status          CallStatus  @default(initiated)
+  outcome         CallOutcome? // set on call.completed by outcome-classifier.ts
+  durationSeconds Int?
+  transcript      String?     // full conversation text
+  summary         String?     // Bolna auto-summary
+  functionsCalled Json?       // string[] — which agent tools were triggered
+  wasTicketCreated Boolean    @default(false) // used by outcome classifier
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([callSid])
+  @@index([status])
+  @@index([outcome])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique // from Bolna payload — dedup key
+  eventType   String   // call.initiated | call.in_progress | call.completed | call.failed
+  payload     Json     // raw Bolna payload stored for debugging
+  processedAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model CallContext {
+  id                String   @id @default(cuid())
+  callSid           String   @unique // one context per active call
+  lastOrderId       String?  // e.g. "ORD-00003" — enables "cancel it"
+  lastIntent        String?  // e.g. "check_order_status"
+  lastCustomerEmail String?
+  updatedAt         DateTime @updatedAt
+
+  @@index([callSid])
+}
