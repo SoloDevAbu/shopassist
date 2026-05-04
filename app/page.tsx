@@ -53,10 +53,6 @@ export default function CustomerPortal() {
               <OrderLookupForm />
             </TabsContent>
 
-            <TabsContent value="support" className="mt-0 outline-none">
-              <SupportForm />
-            </TabsContent>
-
             <TabsContent value="contact" className="mt-0 outline-none">
               <CallbackForm />
             </TabsContent>
