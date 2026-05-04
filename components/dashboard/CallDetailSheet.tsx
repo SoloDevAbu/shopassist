@@ -83,14 +83,25 @@ export function CallDetailSheet({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden p-0">
-          <div className="shrink-0 border-b border-border bg-neutral-100 p-4 dark:bg-neutral-950">
-            <h3 className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-              Transcript
-            </h3>
-          </div>
+        <ScrollArea className="flex-1 h-full bg-background border-t border-border">
+          <div className="flex flex-col">
+            {call.summary && (
+              <div className="shrink-0 border-b border-border p-4">
+                <div className="mb-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                  Summary
+                </div>
+                <p className="text-xs leading-relaxed text-foreground">
+                  {call.summary}
+                </p>
+              </div>
+            )}
 
-          <ScrollArea className="flex-1 h-full bg-background">
+            <div className="shrink-0 border-b border-border bg-neutral-100 p-4 dark:bg-neutral-950">
+              <h3 className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Transcript
+              </h3>
+            </div>
+
             <div className="space-y-4 pb-8 font-mono text-xs p-4">
               {transcriptLines.length === 0 ? (
                 <div className="text-muted-foreground italic">
@@ -114,8 +125,8 @@ export function CallDetailSheet({
                 })
               )}
             </div>
-          </ScrollArea>
-        </div>
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   )
