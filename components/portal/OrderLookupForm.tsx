@@ -22,13 +22,15 @@ export function OrderLookupForm() {
     setResult(null)
 
     try {
-      const res = await fetch(`/api/orders/status?orderId=${encodeURIComponent(orderId)}`)
+      const res = await fetch(
+        `/api/orders/user/status?order_id=${encodeURIComponent(orderId)}`
+      )
       const data = await res.json()
-      
+
       if (!res.ok) {
         throw new Error(data.error?.message || "Failed to fetch order")
       }
-      
+
       setResult(data.data)
     } catch (err: any) {
       setError(err.message)
@@ -39,21 +41,21 @@ export function OrderLookupForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
         <div className="flex-1 space-y-2">
-          <Input 
-            placeholder="ORD-XXXXX" 
+          <Input
+            placeholder="ORD-XXXXX"
             value={orderId}
             onChange={(e) => setOrderId(e.target.value.toUpperCase())}
             disabled={loading}
-            className={`font-mono uppercase rounded-none bg-neutral-50 dark:bg-neutral-900 border-border ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            className={`rounded-none border-border bg-neutral-50 font-mono uppercase dark:bg-neutral-900 ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
           />
-          {error && <p className="text-red-500 text-xs font-medium">{error}</p>}
+          {error && <p className="text-xs font-medium text-red-500">{error}</p>}
         </div>
-        <Button 
-          type="submit" 
-          disabled={loading || !orderId.trim()} 
-          className="w-full sm:w-auto min-w-[120px] bg-primary text-primary-foreground hover:bg-primary/90 rounded-none font-bold tracking-wider uppercase text-xs"
+        <Button
+          type="submit"
+          disabled={loading || !orderId.trim()}
+          className="w-full min-w-[120px] rounded-none bg-primary text-xs font-bold tracking-wider text-primary-foreground uppercase hover:bg-primary/90 sm:w-auto"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Look Up"}
         </Button>
