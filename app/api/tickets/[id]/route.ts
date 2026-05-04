@@ -9,8 +9,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { ticketId: id },
+    const ticket = await prisma.supportTicket.findFirst({
+      where: {
+        OR: [
+          { id: id },
+          { ticketId: id }
+        ]
+      },
       include: {
         order: { select: { orderId: true, status: true, totalAmount: true, items: true } },
       },
@@ -62,7 +67,14 @@ export async function PATCH(
     const { status } = parsed.data
 
     // Check ticket exists
-    const existing = await prisma.supportTicket.findUnique({ where: { ticketId: id } })
+    const existing = await prisma.supportTicket.findFirst({
+      where: {
+        OR: [
+          { id: id },
+          { ticketId: id }
+        ]
+      }
+    })
     if (!existing) {
       return NextResponse.json(
         { success: false, error: { code: "TICKET_NOT_FOUND", message: `No ticket found with ID ${id}` } },
@@ -74,7 +86,7 @@ export async function PATCH(
     const resolvedAt = (status === "resolved" || status === "closed") ? new Date() : undefined
 
     const updated = await prisma.supportTicket.update({
-      where: { ticketId: id },
+      where: { id: existing.id },
       data: { status, ...(resolvedAt ? { resolvedAt } : {}) },
     })
 
