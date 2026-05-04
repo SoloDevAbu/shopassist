@@ -1,4 +1,5 @@
 // Re-export Prisma enums for convenience
+export type { BolnaWebhookPayload } from "../validator/webhook"
 export {
   OrderStatus,
   RefundStatus,
