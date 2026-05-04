@@ -10,8 +10,6 @@ export async function GET() {
       take: 50,
     })
 
-    // Map toNumber → callerPhone for dashboard display consistency
-    // (the DB stores toNumber; dashboard components expect callerPhone)
     const mapped = calls.map((c) => ({
       ...c,
       callerPhone: c.toNumber ?? null,
@@ -20,6 +18,9 @@ export async function GET() {
     return NextResponse.json({ data: mapped })
   } catch (error) {
     console.error("Calls API error:", error)
-    return NextResponse.json({ error: { message: "Failed to fetch calls" } }, { status: 500 })
+    return NextResponse.json(
+      { error: { message: "Failed to fetch calls" } },
+      { status: 500 }
+    )
   }
 }

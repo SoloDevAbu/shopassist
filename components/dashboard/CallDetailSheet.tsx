@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   Sheet,
   SheetContent,
@@ -83,7 +82,7 @@ export function CallDetailSheet({
           </div>
         </div>
 
-        <ScrollArea className="flex-1 h-full bg-background border-t border-border">
+        <ScrollArea className="h-full flex-1 border-t border-border bg-background">
           <div className="flex flex-col">
             {call.summary && (
               <div className="shrink-0 border-b border-border p-4">
@@ -102,7 +101,7 @@ export function CallDetailSheet({
               </h3>
             </div>
 
-            <div className="space-y-4 pb-8 font-mono text-xs p-4">
+            <div className="space-y-4 p-4 pb-8 font-mono text-xs">
               {transcriptLines.length === 0 ? (
                 <div className="text-muted-foreground italic">
                   No transcript available.

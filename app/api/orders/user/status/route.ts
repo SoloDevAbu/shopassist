@@ -1,27 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { verifyAgentSecret } from "@/lib/auth"
 import { upsertContext } from "@/lib/call-context"
 import { OrderStatusQuerySchema } from "@/validator/order"
 
 /**
- * GET /api/orders/status
+ * GET /api/orders/user/status
  *
- * Called by: Bolna agent when customer asks "Where is my order?"
- * Auth: Bearer AGENT_SECRET_KEY
+ * Called by: user to get their order status
  */
 export async function GET(request: NextRequest) {
   try {
-    if (!verifyAgentSecret(request)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: "UNAUTHORIZED", message: "Invalid agent secret" },
-        },
-        { status: 401 }
-      )
-    }
-
     const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = OrderStatusQuerySchema.safeParse(searchParams)
 

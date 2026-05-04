@@ -4,14 +4,6 @@ import { verifyAgentSecret } from "@/lib/auth"
 import { upsertContext } from "@/lib/call-context"
 import { CancelSubscriptionBodySchema } from "@/validator/subscription"
 
-/**
- * POST /api/subscriptions/cancel
- *
- * Called by: Bolna agent after customer confirms subscription cancellation.
- * Auth: Bearer AGENT_SECRET_KEY
- *
- * Note: Paused subscriptions can be cancelled.
- */
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify agent secret

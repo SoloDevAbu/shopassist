@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { UpdateTicketBodySchema } from "@/validator/ticket"
 
-// GET /api/tickets/[id] — Single ticket detail (dashboard)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +37,6 @@ export async function GET(
       )
     }
 
-    // Join with CallLog via callSid
     let call = null
     if (ticket.callSid) {
       call = await prisma.callLog.findUnique({
@@ -78,7 +76,6 @@ export async function GET(
   }
 }
 
-// PATCH /api/tickets/[id] — Update ticket status (dashboard)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -104,7 +101,6 @@ export async function PATCH(
 
     const { status } = parsed.data
 
-    // Check ticket exists
     const existing = await prisma.supportTicket.findFirst({
       where: {
         OR: [{ id: id }, { ticketId: id }],
@@ -123,7 +119,6 @@ export async function PATCH(
       )
     }
 
-    // Set resolvedAt if status is resolved or closed
     const resolvedAt =
       status === "resolved" || status === "closed" ? new Date() : undefined
 

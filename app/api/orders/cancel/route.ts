@@ -9,14 +9,9 @@ import { CancelOrderBodySchema } from "@/validator/order"
  *
  * Called by: Bolna agent after customer confirms cancellation.
  * Auth: Bearer AGENT_SECRET_KEY
- *
- * Uses a Prisma transaction to atomically cancel the order
- * and create a pending refund. If the refund insert fails,
- * the order must NOT be marked cancelled.
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify agent secret
     if (!verifyAgentSecret(request)) {
       return NextResponse.json(
         {
@@ -27,7 +22,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Validate body
     const body = await request.json()
     const parsed = CancelOrderBodySchema.safeParse(body)
 
@@ -47,7 +41,6 @@ export async function POST(request: NextRequest) {
 
     let { order_id, customer_email, call_sid } = parsed.data
 
-    // Fall back to call context if order_id not provided
     if (!order_id && call_sid) {
       const ctx = await getContext(call_sid)
       if (ctx?.lastOrderId) {
@@ -55,10 +48,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Normalise email — trim and lowercase to avoid transcription-induced mismatches
     customer_email = customer_email.trim().toLowerCase()
 
-    // Fall back to call context email if available
     if (!customer_email && call_sid) {
       const ctx = await getContext(call_sid)
       if (ctx?.lastCustomerEmail) {
@@ -66,12 +57,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Query order
     const order = await prisma.order.findUnique({
       where: { orderId: order_id },
     })
 
-    // 4. Not found
     if (!order) {
       return NextResponse.json(
         {
@@ -85,9 +74,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 5. Email verification (case-insensitive, trimmed)
     if (order.customerEmail.toLowerCase().trim() !== customer_email) {
-      // Try call context email as fallback
       let contextEmail: string | null = null
       if (call_sid) {
         const ctx = await getContext(call_sid)
@@ -96,7 +83,10 @@ export async function POST(request: NextRequest) {
           : null
       }
 
-      if (!contextEmail || order.customerEmail.toLowerCase().trim() !== contextEmail) {
+      if (
+        !contextEmail ||
+        order.customerEmail.toLowerCase().trim() !== contextEmail
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -109,10 +99,8 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         )
       }
-      // Accepted via context email fallback
     }
 
-    // 6. Check order status
     if (order.status === "shipped" || order.status === "delivered") {
       return NextResponse.json(
         {
@@ -139,7 +127,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 7. Transaction: cancel order + create refund atomically
     const [updatedOrder, refund] = await prisma.$transaction([
       prisma.order.update({
         where: { orderId: order_id },
@@ -155,7 +142,6 @@ export async function POST(request: NextRequest) {
       }),
     ])
 
-    // 8. Context upsert
     if (call_sid) {
       await upsertContext(call_sid, {
         lastOrderId: order_id,
@@ -163,7 +149,6 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 9. Return confirmation
     return NextResponse.json({
       success: true,
       data: {

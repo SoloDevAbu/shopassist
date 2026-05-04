@@ -7,10 +7,9 @@ import { inferPriority } from "@/lib/priority-engine"
 import {
   CreateTicketBodySchema,
   ListTicketsQuerySchema,
-} from "../../../validator/ticket"
-import type { TicketPriority } from "../../../types"
+} from "@/validator/ticket"
+import type { TicketPriority } from "@/types"
 
-// POST /api/tickets — Create ticket (voice agent or web portal)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -42,7 +41,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Priority engine
     let order = null
     let subscription = null
     if (data.orderId) {

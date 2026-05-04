@@ -5,9 +5,7 @@ import { clearContext } from "@/lib/call-context"
 import { classifyOutcome } from "@/lib/outcome-classifier"
 import { BolnaWebhookPayloadSchema } from "@/validator/webhook"
 
-export const maxDuration = 30 // Allow up to 30s for DB writes on Vercel
-
-// ── Worker handlers (registered on module load) ─────────────────────────────
+export const maxDuration = 30
 
 queue.process("bolna.scheduled", async (payload) => {
   const p = payload as {
@@ -94,7 +92,6 @@ queue.process("bolna.completed", async (payload) => {
     },
   })
 
-  // If any ticket was created during this call, link it to the summary
   if (wasTicketCreated) {
     await prisma.supportTicket.updateMany({
       where: { callSid: p.executionId },
@@ -125,8 +122,6 @@ queue.process("bolna.cancelled", async (payload) => {
   await clearContext(p.executionId)
 })
 
-// ── POST /api/bolna/webhook ──────────────────────────────────────────────────
-
 export async function POST(request: NextRequest) {
   let body: unknown
   try {
@@ -140,7 +135,6 @@ export async function POST(request: NextRequest) {
 
   const parsed = BolnaWebhookPayloadSchema.safeParse(body)
   if (!parsed.success) {
-    // Log but return 200 so Bolna doesn't retry indefinitely
     console.error(
       JSON.stringify({
         level: "warn",
@@ -170,11 +164,9 @@ export async function POST(request: NextRequest) {
     agent_id,
   } = parsed.data
 
-  // Resolve phone numbers — newer Bolna payloads use user_number/agent_number
   const resolvedToNumber = user_number ?? to_number ?? null
   const resolvedFromNumber = agent_number ?? from_number ?? null
 
-  // Resolve duration — prefer conversation_duration, then telephony_data.duration, then duration
   const resolvedDuration =
     conversation_duration ??
     (telephony_data?.duration != null
@@ -183,7 +175,6 @@ export async function POST(request: NextRequest) {
     duration ??
     null
 
-  // Idempotency key: composite id::status — Bolna sends one event per status change
   const eventId = `${id}::${status}`
 
   try {
@@ -192,16 +183,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (e: any) {
     if (e.code === "P2002") {
-      // Already processed — safe to acknowledge
       return NextResponse.json({ received: true, duplicate: true })
     }
     throw e
   }
 
-  // Extract function names from Bolna's tool_calls array
   const toolCallNames = (tool_calls ?? []).map((t) => t.name)
 
-  // Enqueue processing job (non-blocking) — ACK to Bolna immediately
   const jobType = `bolna.${status}` as const
 
   await queue.enqueue({

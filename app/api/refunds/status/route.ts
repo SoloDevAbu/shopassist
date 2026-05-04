@@ -12,7 +12,6 @@ import { RefundStatusQuerySchema } from "@/validator/order"
  */
 export async function GET(request: NextRequest) {
   try {
-    // 1. Verify agent secret
     if (!verifyAgentSecret(request)) {
       return NextResponse.json(
         {
@@ -23,7 +22,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 2. Validate query params
     const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const parsed = RefundStatusQuerySchema.safeParse(searchParams)
 
@@ -43,7 +41,6 @@ export async function GET(request: NextRequest) {
 
     const { order_id, call_sid } = parsed.data
 
-    // 3. Context upsert if call_sid present
     if (call_sid) {
       await upsertContext(call_sid, {
         lastOrderId: order_id,
@@ -51,7 +48,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 4. Check order exists first
     const order = await prisma.order.findUnique({
       where: { orderId: order_id },
     })
@@ -69,7 +65,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 5. Query refund
     const refund = await prisma.refund.findUnique({
       where: { orderId: order_id },
     })
@@ -87,7 +82,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 6. Format dates
     const initiatedAt = refund.initiatedAt.toLocaleDateString("en-IN", {
       month: "long",
       day: "numeric",
@@ -102,7 +96,6 @@ export async function GET(request: NextRequest) {
         })
       : null
 
-    // Build voice-friendly message
     let message = ""
     switch (refund.status) {
       case "pending":

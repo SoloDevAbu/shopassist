@@ -4,16 +4,8 @@ import { verifyAgentSecret } from "@/lib/auth"
 
 /**
  * GET /api/bolna/caller-lookup
- *
- * Called by Bolna automatically when the agent connects (Inbound Tab → API Data Source).
- * Bolna passes these query params:
- *   ?contact_number=+919876543210&agent_id=<uuid>&execution_id=<uuid>
- *
- * Returns JSON that Bolna injects into the agent's active prompt as context variables.
- * Keys must match {{variable_name}} placeholders in your Bolna agent prompt.
  */
 export async function GET(request: Request) {
-  // Bolna sends AGENT_SECRET_KEY as Bearer token
   if (!verifyAgentSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -22,15 +14,11 @@ export async function GET(request: Request) {
   const contactNumber = searchParams.get("contact_number")
   const executionId = searchParams.get("execution_id")
 
-  // Always return valid JSON — never block the call
   if (!contactNumber) {
     return NextResponse.json(defaultContext())
   }
 
-  // ── Demo phone map ──────────────────────────────────────────────────────────
-  // Map your test phone number → seed data for the demo recording
   const DEMO_PHONE_MAP: Record<string, object> = {
-    // Add your own number here: "+919XXXXXXXXX"
     ...(process.env.DEMO_PHONE_NUMBER
       ? {
           [process.env.DEMO_PHONE_NUMBER]: {
@@ -49,9 +37,6 @@ export async function GET(request: Request) {
     return NextResponse.json(DEMO_PHONE_MAP[contactNumber])
   }
 
-  // ── Production path: look up by phone number ────────────────────────────────
-  // In production, your customers would have phone numbers stored in the DB
-  // For now, return generic guest context — the call still proceeds normally
   try {
     const [activeSubscription, recentOrder] = await Promise.all([
       prisma.subscription.findFirst({
