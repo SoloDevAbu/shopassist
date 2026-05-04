@@ -8,7 +8,7 @@ import { z } from "zod/v4"
 export const BolnaWebhookPayloadSchema = z.object({
   // Identity — "id" is the execution_id / call identifier
   id: z.string().min(1, "id is required"),
-  agent_id: z.string().optional(),
+  agent_id: z.string().nullish(),
 
   // Status changes: scheduled → queued → in-progress → completed | failed | cancelled
   status: z.enum([
@@ -21,20 +21,20 @@ export const BolnaWebhookPayloadSchema = z.object({
   ]),
 
   // Phone numbers (present once call connects)
-  to_number: z.string().optional(),   // customer's phone
-  from_number: z.string().optional(), // Bolna's number
+  to_number: z.string().nullish(),   // customer's phone
+  from_number: z.string().nullish(), // Bolna's number
 
   // Timestamps
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  created_at: z.string().nullish(),
+  updated_at: z.string().nullish(),
 
   // Duration in seconds — only on completed/failed
-  duration: z.number().optional(),
+  duration: z.number().nullish(),
 
   // Content — only on completed
-  transcript: z.string().optional(),
-  summary: z.string().optional(),
-  recording_url: z.string().optional(),
+  transcript: z.string().nullish(),
+  summary: z.string().nullish(),
+  recording_url: z.string().nullish(),
 
   // Function calls made during the call
   tool_calls: z
@@ -45,10 +45,10 @@ export const BolnaWebhookPayloadSchema = z.object({
         output: z.record(z.string(), z.unknown()).optional(),
       })
     )
-    .optional(),
+    .nullish(),
 
   // Post-call extractions (if configured in Analytics Tab)
-  extractions: z.record(z.string(), z.string()).optional(),
+  extractions: z.record(z.string(), z.string()).nullish(),
 })
 
 export type BolnaWebhookPayload = z.infer<typeof BolnaWebhookPayloadSchema>
